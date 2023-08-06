@@ -1,0 +1,4 @@
+django==4.2.0
+python-dotenv
+djangorestframework
+psycopg2-binary
