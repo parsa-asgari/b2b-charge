@@ -31,7 +31,7 @@ class MerchantViewSet(
         validated_data = serializer.validated_data
         merchant = get_object_or_404(Merchant, id=pk)
         credit = validated_data["credit"]
-        if credit < 0 :
+        if credit < 0:
             return Response(
                 {
                     "message": "Cannot execute transaction due to : Cannot accept Negative credit amount."
@@ -39,14 +39,10 @@ class MerchantViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            merchant.transaction(
-                action='add_credit', amount=credit, phone=None
-            )
+            merchant.transaction(action="add_credit", amount=credit, phone=None)
         except Exception as e:
             return Response(
-                {
-                    "message": "Cannot execute transaction due to : %s"%(e)
-                },
+                {"message": "Cannot execute transaction due to : %s" % (e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -74,19 +70,17 @@ class MerchantViewSet(
         merchant = get_object_or_404(Merchant, id=pk)
 
         try:
-            merchant.transaction(action='subtract_credit', phone=phone, amount=amount)
+            merchant.transaction(action="subtract_credit", phone=phone, amount=amount)
         except Exception as e:
             return Response(
-                {
-                    "message": "Cannot execute transaction due to : %s"%(e)
-                },
+                {"message": "Cannot execute transaction due to : %s" % (e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(
             {
                 "message": "Successfully bought charge.",
-                "amount" : amount,
-                'merchant_credit' : merchant.get_credit()
+                "amount": amount,
+                "merchant_credit": merchant.get_credit(),
             },
             status=status.HTTP_200_OK,
         )

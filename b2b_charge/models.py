@@ -47,17 +47,18 @@ class Merchant(BaseModel):
     def subtract_credit(self, credit):
         if self.credit - credit < 0:
             raise Exception(
-                "subtract_credit: Negative Credits happened. Cannot Continue. %d - %d. merchant_id: %d, merchant_credits: %d"%(self.credit, credit, self.id ,self.get_credit())
+                "subtract_credit: Negative Credits happened. Cannot Continue. %d - %d. merchant_id: %d, merchant_credits: %d"
+                % (self.credit, credit, self.id, self.get_credit())
             )
         self.credit -= credit
         self.save()
 
     @atomic
     def transaction(self, action, phone, amount):
-        if action == 'add_credit':
+        if action == "add_credit":
             self.add_credit(amount)
             TransactionLog(merchant_id=self.id, phone=None, amount=amount).log()
-        elif action == 'subtract_credit':
+        elif action == "subtract_credit":
             self.subtract_credit(amount)
             amount = amount * -1
             TransactionLog(merchant_id=self.id, phone=phone, amount=amount).log()
@@ -81,5 +82,5 @@ class TransactionLog(BaseModel):
     def get_merchant_credit_sum(cls, merchant):
         merchant_transactionlogs_sum = cls.objects.filter(merchant=merchant).aggregate(
             Sum("amount")
-        )['amount__sum']
+        )["amount__sum"]
         return merchant_transactionlogs_sum

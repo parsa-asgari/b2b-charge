@@ -27,6 +27,6 @@ router.registry.extend(b2b_charge_router.registry)
 
 urlpatterns = [
     path("", lambda request: redirect("admin/", permanent=True)),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     path("api/v1/", include(router.urls)),
 ]

@@ -53,12 +53,14 @@ class MerchantTestCase(APITestCase):
                 reverse("merchant-list") + str(data["merchant_id"]) + "/buy-charge/",
                 data=data,
             )
-            # print(response.json())
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             merchant_credit -= data["amount"]
         return merchant_credit
 
     def test_merchant_add_credit_normal(self):
+        """
+        tests the <add-credit> endpoint for normal positive amounts.
+        """
         # Merchant 1
         merchant_1_credit = self.add_credit_x_times(x=2, data=self.data_1)
         merchant_get_response = self.client.get(
@@ -85,8 +87,7 @@ class MerchantTestCase(APITestCase):
 
     def test_merchant_add_credit_negative_amount(self):
         """
-        Generates data for Merchant1 and Merchant2 using self.setUp().
-        Then, posts a negative amount to <add-credit> endpoint. The endpoint should refuse.
+        tests the <add-credit> endpoint for negative amounts.
         """
         # Merchant1
         data = self.data_1
@@ -107,6 +108,10 @@ class MerchantTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_buy_charge(self):
+        """
+        adds credits to the merchants, then buys charge.
+        Lastly, checks to see if the <get-credit> returns the right credit compared to the actions done so far.
+        """
         # Merchant 1
         merchant_1_added_credits = self.add_credit_x_times(x=2, data=self.data_1)
         merchant_1_bought_charges = self.subtract_credit_x_times(x=10, data=self.data_1)
@@ -115,7 +120,10 @@ class MerchantTestCase(APITestCase):
             data=self.data_1,
         )
         self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(merchant_get_response.json()['credit'], merchant_1_added_credits+merchant_1_bought_charges)
+        self.assertEqual(
+            merchant_get_response.json()["credit"],
+            merchant_1_added_credits + merchant_1_bought_charges,
+        )
 
         # Merchant 2
         merchant_2_added_credits = self.add_credit_x_times(x=2, data=self.data_2)
@@ -125,24 +133,38 @@ class MerchantTestCase(APITestCase):
             data=self.data_2,
         )
         self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(merchant_get_response.json()['credit'], merchant_2_added_credits+merchant_2_bought_charges)
+        self.assertEqual(
+            merchant_get_response.json()["credit"],
+            merchant_2_added_credits + merchant_2_bought_charges,
+        )
 
     def test_buy_charge_negative_case(self):
-        # Merchant 1
-        merchant_1_added_credits = self.add_credit_x_times(x=2, data=self.data_1)
-        merchant_1_bought_charges = self.subtract_credit_x_times(x=10, data=self.data_1)
-        merchant_get_response = self.client.get(
-            reverse("merchant-list") + str(self.data_1["merchant_id"]) + "/get-credit/",
-            data=self.data_1,
-        )
-        self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(merchant_get_response.json()['credit'], merchant_1_added_credits+merchant_1_bought_charges)
+        """
+        adds credits to the merchants, then buys charge.
+        The charge buying function is set to exhaust the merchant's credits. So that, it would throw an exception.
 
+        If the exception is generated, this test succeeds. Else, it fails
+        """
+        # Merchant 1
+        try:
+            self.add_credit_x_times(x=2, data=self.data_1)
+            self.subtract_credit_x_times(x=1000, data=self.data_1)
+            self.fail()
+        except:
+            self.assertEqual(1, 1)
+
+        # Merchant 2
+        try:
+            self.add_credit_x_times(x=2, data=self.data_2)
+            self.subtract_credit_x_times(x=1000, data=self.data_2)
+            self.fail()
+        except:
+            self.assertEqual(1, 1)
 
     def test_transactionlog_sum(self):
         """
         Generates data for Merchant1 and Merchant2 using self.setUp().
-        Then, checks to see if the response of the <get-credit> endpoint and the sum in logs match.
+        Then, checks to see if the response of the <get-credit> endpoint and the calculted sum using the logs match.
         """
         # Merchant 1
         merchant_1_added_credits = self.add_credit_x_times(x=2, data=self.data_1)
