@@ -47,7 +47,7 @@ class Merchant(BaseModel):
     def subtract_credit(self, credit):
         if self.credit - credit < 0:
             raise Exception(
-                "subtract_credit: Negative Credits happened. Cannot Continue."
+                "subtract_credit: Negative Credits happened. Cannot Continue. %d - %d. merchant_id: %d, merchant_credits: %d"%(self.credit, credit, self.id ,self.get_credit())
             )
         self.credit -= credit
         self.save()
