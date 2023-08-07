@@ -182,7 +182,10 @@ class MerchantTestCase(APITestCase):
         self.assertEqual(
             merchant_1_credit_sum, merchant_1_added_credits + merchant_1_bought_charges
         )
-
+        self.assertEqual(
+            merchant_get_response.json()["credit"],
+            merchant_1_added_credits + merchant_1_bought_charges,
+        )
         # Merchant 2
         merchant_2_added_credits = self.add_credit_x_times(x=2, data=self.data_2)
         merchant_2_bought_charges = self.subtract_credit_x_times(x=10, data=self.data_2)
@@ -199,8 +202,69 @@ class MerchantTestCase(APITestCase):
         self.assertEqual(
             merchant_2_credit_sum, merchant_2_added_credits + merchant_2_bought_charges
         )
+        self.assertEqual(
+            merchant_get_response.json()["credit"],
+            merchant_2_added_credits + merchant_2_bought_charges,
+        )
 
+    # Atomicity Test
+    def test_transaction_atomicity_add_credit(self):
+        try:
+            # Merchant's initial credit
+            merchant_get_response = self.client.get(
+                reverse("merchant-list")
+                + str(self.data_1["merchant_id"])
+                + "/get-credit/",
+                data=self.data_1,
+            )
+            merchant_initial_credit = merchant_get_response.json()["credit"]
 
+            merchant_1 = Merchant.objects.get_or_create(id=self.data_1["merchant_id"])
+            random_amount = random.choice([1000, 2000, 5000, 10000, 20000])
+            merchant_1.transaction(action="add_credit", amount=random_amount, test=True)
+            self.fail()
+        except:
+            merchant_get_response = self.client.get(
+                reverse("merchant-list")
+                + str(self.data_1["merchant_id"])
+                + "/get-credit/",
+                data=self.data_1,
+            )
+            merchant_credit = merchant_get_response.json()["credit"]
+
+            self.assertEqual(merchant_initial_credit, merchant_credit)
+
+    def test_transaction_atomicity_subtract_credit(self):
+        try:
+            # Merchant's initial credit
+            merchant_get_response = self.client.get(
+                reverse("merchant-list")
+                + str(self.data_1["merchant_id"])
+                + "/get-credit/",
+                data=self.data_1,
+            )
+            merchant_initial_credit = merchant_get_response.json()["credit"]
+
+            merchant_1 = Merchant.objects.get_or_create(id=self.data_1["merchant_id"])
+            random_amount = random.choice([1000, 2000, 5000, 10000, 20000])
+            random_phone = random.choice([1, 2, 3, 4, 5])
+            merchant_1.transaction(
+                action="subtract_credit",
+                phone=random_phone,
+                amount=random_amount,
+                test=True,
+            )
+            self.fail()
+        except:
+            merchant_get_response = self.client.get(
+                reverse("merchant-list")
+                + str(self.data_1["merchant_id"])
+                + "/get-credit/",
+                data=self.data_1,
+            )
+            merchant_credit = merchant_get_response.json()["credit"]
+
+            self.assertEqual(merchant_initial_credit, merchant_credit)
         # Phase 2
 
     def test_merchant_add_credit_normal_phase2(self):
@@ -233,7 +297,6 @@ class MerchantTestCase(APITestCase):
         )
         self.assertEqual(merchant_get_response.data["credit"], merchant_2_credit)
 
-
     def test_buy_charge_phase2(self):
         """
         adds credits to the merchants, then buys charge.
@@ -241,7 +304,9 @@ class MerchantTestCase(APITestCase):
         """
         # Merchant 1
         merchant_1_added_credits = self.add_credit_x_times(x=10, data=self.data_1)
-        merchant_1_bought_charges = self.subtract_credit_x_times(x=1000, data=self.data_1)
+        merchant_1_bought_charges = self.subtract_credit_x_times(
+            x=1000, data=self.data_1
+        )
         merchant_get_response = self.client.get(
             reverse("merchant-list") + str(self.data_1["merchant_id"]) + "/get-credit/",
             data=self.data_1,
@@ -254,7 +319,9 @@ class MerchantTestCase(APITestCase):
 
         # Merchant 2
         merchant_2_added_credits = self.add_credit_x_times(x=10, data=self.data_2)
-        merchant_2_bought_charges = self.subtract_credit_x_times(x=1000, data=self.data_2)
+        merchant_2_bought_charges = self.subtract_credit_x_times(
+            x=1000, data=self.data_2
+        )
         merchant_get_response = self.client.get(
             reverse("merchant-list") + str(self.data_2["merchant_id"]) + "/get-credit/",
             data=self.data_2,

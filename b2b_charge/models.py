@@ -79,16 +79,20 @@ class Merchant(BaseModel):
         # self.refresh_from_db()
 
     @atomic
-    def transaction(self, action, phone, amount):
+    def transaction(self, action, phone, amount, test=False):
         """
         The method that executes the transaction and log in atomic fashion.
         """
         if action == "add_credit":
             self.add_credit(amount)
+            if test:
+                raise Exception('Exception during adding up credit.')
             TransactionLog(merchant_id=self.id, phone=None, amount=amount).log()
         elif action == "subtract_credit":
             self.subtract_credit(amount)
             amount = amount * -1
+            if test:
+                raise Exception('Exception during adding up credit.')
             TransactionLog(merchant_id=self.id, phone=phone, amount=amount).log()
 
 
