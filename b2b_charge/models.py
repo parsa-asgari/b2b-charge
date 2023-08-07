@@ -27,6 +27,9 @@ class Merchant(BaseModel):
 
     @classmethod
     def create_merchant(cls, initial_credit=0):
+        """
+        A factory method which returns merchant objects.
+        """
         if initial_credit < 0:
             raise Exception(
                 "create_merchant: Negative Credits happened. Cannot Continue."
@@ -36,15 +39,24 @@ class Merchant(BaseModel):
         return merchant
 
     def get_credit(self):
+        """
+        Returns the overall credit of the merchant.
+        """
         return self.credit
 
     def add_credit(self, credit):
+        """
+        Adds credit to the merchant.
+        """
         if self.credit + credit < 0:
             raise Exception("add_credit: Negative Credits happened. Cannot Continue.")
         self.credit += credit
         self.save()
 
     def subtract_credit(self, credit):
+        """
+        Subtracts merchant's credit.
+        """
         if self.credit - credit < 0:
             raise Exception(
                 "subtract_credit: Negative Credits happened. Cannot Continue. %d - %d. merchant_id: %d, merchant_credits: %d"
@@ -55,6 +67,9 @@ class Merchant(BaseModel):
 
     @atomic
     def transaction(self, action, phone, amount):
+        """
+        The method that executes the transaction and log in atomic fashion.
+        """
         if action == "add_credit":
             self.add_credit(amount)
             TransactionLog(merchant_id=self.id, phone=None, amount=amount).log()
@@ -76,10 +91,16 @@ class TransactionLog(BaseModel):
     amount = models.IntegerField(verbose_name="Charge Amount", default=0)
 
     def log(self):
+        """
+        logs the transaction.
+        """
         self.save()
 
     @classmethod
     def get_merchant_credit_sum(cls, merchant):
+        """
+        Gets the sum of all transactions for a particular merchant using the logs.
+        """
         merchant_transactionlogs_sum = cls.objects.filter(merchant=merchant).aggregate(
             Sum("amount")
         )["amount__sum"]

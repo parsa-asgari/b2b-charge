@@ -26,6 +26,9 @@ class MerchantViewSet(
         detail=True,
     )
     def add_credit(self, request, pk):
+        """
+        The view that adds credit to merchant.
+        """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
@@ -61,6 +64,9 @@ class MerchantViewSet(
         detail=True,
     )
     def buy_charge(self, request, pk):
+        """
+        The view that buys charge for a particular phonenumber using a particular merchant.
+        """
         serializer = BuyChargeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
@@ -93,6 +99,9 @@ class MerchantViewSet(
         detail=True,
     )
     def get_credit(self, request, pk):
+        """
+        The view that returns overall credit for a particular merchant.
+        """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
