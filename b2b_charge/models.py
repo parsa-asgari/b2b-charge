@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.transaction import atomic
-from django.db.models import Sum
+from django.db.models import Sum, F
 
 
 class BaseModel(models.Model):
@@ -50,8 +50,15 @@ class Merchant(BaseModel):
         """
         if self.credit + credit < 0:
             raise Exception("add_credit: Negative Credits happened. Cannot Continue.")
+
+        # The code that falls to race_condition
         self.credit += credit
         self.save()
+
+        # NOTE The code that solves race_condition
+        # self.credit = F("credit") + credit
+        # self.save()
+        # self.refresh_from_db()
 
     def subtract_credit(self, credit):
         """
@@ -62,8 +69,14 @@ class Merchant(BaseModel):
                 "subtract_credit: Negative Credits happened. Cannot Continue. %d - %d. merchant_id: %d, merchant_credits: %d"
                 % (self.credit, credit, self.id, self.get_credit())
             )
+        # The code that falls to race_condition
         self.credit -= credit
         self.save()
+
+        # NOTE The code that solves race_condition
+        # self.credit = F("credit") - credit
+        # self.save()
+        # self.refresh_from_db()
 
     @atomic
     def transaction(self, action, phone, amount):

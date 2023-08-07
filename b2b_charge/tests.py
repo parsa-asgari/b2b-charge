@@ -199,3 +199,68 @@ class MerchantTestCase(APITestCase):
         self.assertEqual(
             merchant_2_credit_sum, merchant_2_added_credits + merchant_2_bought_charges
         )
+
+
+        # Phase 2
+
+    def test_merchant_add_credit_normal_phase2(self):
+        """
+        tests the <add-credit> endpoint for normal positive amounts.
+
+        phase 2
+        """
+        # Merchant 1
+        merchant_1_credit = self.add_credit_x_times(x=10, data=self.data_1)
+        merchant_get_response = self.client.get(
+            reverse("merchant-list") + str(self.data_1["merchant_id"]) + "/get-credit/",
+            data=self.data_1,
+        )
+        self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            merchant_get_response.data["merchant_id"], self.data_1["merchant_id"]
+        )
+        self.assertEqual(merchant_get_response.data["credit"], merchant_1_credit)
+
+        # Merchant 2
+        merchant_2_credit = self.add_credit_x_times(x=10, data=self.data_2)
+        merchant_get_response = self.client.get(
+            reverse("merchant-list") + str(self.data_2["merchant_id"]) + "/get-credit/",
+            data=self.data_2,
+        )
+        self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            merchant_get_response.data["merchant_id"], self.data_2["merchant_id"]
+        )
+        self.assertEqual(merchant_get_response.data["credit"], merchant_2_credit)
+
+
+    def test_buy_charge_phase2(self):
+        """
+        adds credits to the merchants, then buys charge.
+        Lastly, checks to see if the <get-credit> returns the right credit compared to the actions done so far.
+        """
+        # Merchant 1
+        merchant_1_added_credits = self.add_credit_x_times(x=10, data=self.data_1)
+        merchant_1_bought_charges = self.subtract_credit_x_times(x=1000, data=self.data_1)
+        merchant_get_response = self.client.get(
+            reverse("merchant-list") + str(self.data_1["merchant_id"]) + "/get-credit/",
+            data=self.data_1,
+        )
+        self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            merchant_get_response.json()["credit"],
+            merchant_1_added_credits + merchant_1_bought_charges,
+        )
+
+        # Merchant 2
+        merchant_2_added_credits = self.add_credit_x_times(x=10, data=self.data_2)
+        merchant_2_bought_charges = self.subtract_credit_x_times(x=1000, data=self.data_2)
+        merchant_get_response = self.client.get(
+            reverse("merchant-list") + str(self.data_2["merchant_id"]) + "/get-credit/",
+            data=self.data_2,
+        )
+        self.assertEqual(merchant_get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            merchant_get_response.json()["credit"],
+            merchant_2_added_credits + merchant_2_bought_charges,
+        )
