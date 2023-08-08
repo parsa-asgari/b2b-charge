@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "b2b_charge",
     # 3rd party
     "rest_framework",
+    'silk',
     # Base apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
