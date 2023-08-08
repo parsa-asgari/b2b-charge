@@ -78,8 +78,6 @@ class MerchantViewSet(
         return Response(
             {
                 "message": "Successfully bought charge.",
-                "amount": amount,
-                "merchant_credit": merchant.get_credit(),
             },
             status=status.HTTP_200_OK,
         )

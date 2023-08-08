@@ -25,6 +25,9 @@ class Merchant(BaseModel):
     credit = models.IntegerField(verbose_name="Merchant Credit", default=0)
     is_active = models.BooleanField(verbose_name="Is active", default=True)
 
+    def __str__(self):
+        return 'Merchant %d' % (self.id)
+
     @classmethod
     def create_merchant(cls, initial_credit=0):
         """
@@ -95,6 +98,15 @@ class Merchant(BaseModel):
                 raise Exception('Exception during adding up credit.')
             TransactionLog(merchant_id=self.id, phone=phone, amount=amount).log()
 
+    def save(self, *args, **kwargs):
+        """
+        The save method is overridden to make sure no negative number is set for a Merchant in the Admin panel.
+        """
+        if self.credit < 0: 
+            self.credit = 0
+
+        super().save(*args, **kwargs)
+
 
 class TransactionLog(BaseModel):
     """
@@ -106,6 +118,9 @@ class TransactionLog(BaseModel):
     )
     phone = models.BigIntegerField(verbose_name="Phone Number", null=True)
     amount = models.IntegerField(verbose_name="Charge Amount", default=0)
+
+    def __str__(self):
+        return 'Merchant %d' % (self.merchant.id)
 
     def log(self):
         """

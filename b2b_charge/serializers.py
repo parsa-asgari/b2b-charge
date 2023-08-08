@@ -5,7 +5,7 @@ from .models import Merchant, TransactionLog
 class MerchantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Merchant
-        exclude = ("created_time", "updated_time", "is_active")
+        exclude = ("created_time", "updated_time", "is_active", "id")
 
 class BuyChargeSerializer(serializers.ModelSerializer):
     phone = serializers.CharField()
