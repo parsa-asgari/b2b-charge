@@ -22,14 +22,14 @@ def race_condition_check():
         t2 = threading.Thread(target=thread_task, args=(2,))
 
         t1.start()
-        print(" ---Thread 1 Started----")
+        print("  *Thread 1 Started* ")
         t2.start()
-        print(" ---Thread 2 Started----")
+        print("  *Thread 2 Started* ")
         t1.join()  # To tell one thread to wait for another thread to finish
-        print(" ---Thread 1 Joined----")
+        print("  *Thread 1 Joined*  ")
         t2.join()
-        print(" ---Thread 2 Joined----")
+        print("  *Thread 2 Joined*  ")
 
     for i in range(3):
-        print("---Doing the round %d: " % (i))
+        print("--->>> Round %d: " % (i))
         main()
