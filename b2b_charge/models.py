@@ -26,7 +26,7 @@ class Merchant(BaseModel):
     is_active = models.BooleanField(verbose_name="Is active", default=True)
 
     def __str__(self):
-        return 'Merchant %d' % (self.id)
+        return "Merchant %d" % (self.id)
 
     @classmethod
     def create_merchant(cls, initial_credit=0):
@@ -54,7 +54,7 @@ class Merchant(BaseModel):
         if self.credit + credit < 0:
             raise Exception("add_credit: Negative Credits happened. Cannot Continue.")
 
-        # The code that falls to race_condition
+        # The code that falls victim to race_condition
         self.credit += credit
         self.save()
 
@@ -72,7 +72,7 @@ class Merchant(BaseModel):
                 "subtract_credit: Negative Credits happened. Cannot Continue. %d - %d. merchant_id: %d, merchant_credits: %d"
                 % (self.credit, credit, self.id, self.get_credit())
             )
-        # The code that falls to race_condition
+        # The code that falls victim to race_condition
         self.credit -= credit
         self.save()
 
@@ -89,21 +89,27 @@ class Merchant(BaseModel):
         if action == "add_credit":
             self.add_credit(amount)
             if test:
-                raise Exception('Exception during adding up credit.')
+                raise Exception("Exception during adding up credit.")
             TransactionLog(merchant_id=self.id, phone=None, amount=amount).log()
         elif action == "subtract_credit":
             self.subtract_credit(amount)
             amount = amount * -1
             if test:
-                raise Exception('Exception during adding up credit.')
+                raise Exception("Exception during adding up credit.")
             TransactionLog(merchant_id=self.id, phone=phone, amount=amount).log()
 
     def save(self, *args, **kwargs):
         """
         The save method is overridden to make sure no negative number is set for a Merchant in the Admin panel.
         """
-        if self.credit < 0: 
-            self.credit = 0
+
+        # To make sure that saving using the admin panel is non-negative.
+        # However, if the save method is invoked somewhere else, it should pass. Using the F expression causes a TypeError in the (self.credit < 0) expression.
+        try:
+            if self.credit < 0:
+                self.credit = 0
+        except TypeError:
+            pass
 
         super().save(*args, **kwargs)
 
@@ -120,7 +126,7 @@ class TransactionLog(BaseModel):
     amount = models.IntegerField(verbose_name="Charge Amount", default=0)
 
     def __str__(self):
-        return 'Merchant %d' % (self.merchant.id)
+        return "Merchant %d" % (self.merchant.id)
 
     def log(self):
         """
