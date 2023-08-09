@@ -2,6 +2,7 @@ from django.db import models
 from django.db.transaction import atomic
 from django.db.models import Sum, F
 
+# from time import sleep
 
 class BaseModel(models.Model):
     """
@@ -22,7 +23,7 @@ class Merchant(BaseModel):
     The model for the B2B Merchant.
     """
 
-    credit = models.IntegerField(verbose_name="Merchant Credit", default=0)
+    credit = models.PositiveIntegerField(verbose_name="Merchant Credit", default=0)
     is_active = models.BooleanField(verbose_name="Is active", default=True)
 
     def __str__(self):
@@ -55,13 +56,16 @@ class Merchant(BaseModel):
             raise Exception("add_credit: Negative Credits happened. Cannot Continue.")
 
         # The code that falls victim to race_condition
-        self.credit += credit
-        self.save()
+        # self.credit += credit
+        # self.save()
 
         # NOTE The code that solves race_condition
-        # self.credit = F("credit") + credit
-        # self.save()
-        # self.refresh_from_db()
+        self.credit = F("credit") + credit
+        self.save()
+        self.refresh_from_db()
+
+        # create_or_update django method
+        # database locks
 
     def subtract_credit(self, credit):
         """
@@ -73,13 +77,15 @@ class Merchant(BaseModel):
                 % (self.credit, credit, self.id, self.get_credit())
             )
         # The code that falls victim to race_condition
-        self.credit -= credit
-        self.save()
+        # print('---->>> Sleeping now')
+        # sleep(100)
+        # self.credit -= credit
+        # self.save()
 
         # NOTE The code that solves race_condition
-        # self.credit = F("credit") - credit
-        # self.save()
-        # self.refresh_from_db()
+        self.credit = F("credit") - credit
+        self.save()
+        self.refresh_from_db()
 
     @atomic
     def transaction(self, action, phone, amount, test=False):
@@ -103,13 +109,13 @@ class Merchant(BaseModel):
         The save method is overridden to make sure no negative number is set for a Merchant in the Admin panel.
         """
 
-        # To make sure that saving using the admin panel is non-negative.
-        # However, if the save method is invoked somewhere else, it should pass. Using the F expression causes a TypeError in the (self.credit < 0) expression.
-        try:
-            if self.credit < 0:
-                self.credit = 0
-        except TypeError:
-            pass
+        # # To make sure that saving using the admin panel is non-negative.
+        # # However, if the save method is invoked somewhere else, it should pass. Using the F expression causes a TypeError in the (self.credit < 0) expression.
+        # try:
+        #     if self.credit < 0:
+        #         self.credit = 0
+        # except TypeError:
+        #     pass
 
         super().save(*args, **kwargs)
 
